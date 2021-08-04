@@ -3,24 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <title>Elanlum Chat</title>
+    <!-- Installing jquery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"
+            integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
+            crossorigin="anonymous">
+    </script>
+<!--    Выбрать макс тайм из пришедших сообщений, передать его в таймстемп, чат не очищать, а только подгружать новые сообщения, обновляя тайм-->
+
+    <!-- Server interaction -->
+    <script language="JavaScript">
+        function loadMessages() {
+
+            $.get("/messages?after_timestamp=0", (data) => {
+                $("#chat_window").empty();
+                let messages = data["messages"];
+                for (var i in messages) {
+                    let message = messages[i];
+                    let name = message["name"];
+                    let text = message["text"];
+                    let time = message["time"];
+                    time = (new Date(time * 1000)).toString();
+
+                    let html = "<div> [<b>" + name + "</b>]: " + text + " <i>" + time + "</i></div>";
+                    let div = $(html);
+                    $("#chat_window").append(div);
+                }
+            });
+        }
+
+        function sendMessage() {
+            let name = $("#name").val()
+            let text = $("#text").val()
+            $.post("/sendMessage", {"name": name, "text": text});
+            $("#text").val("")
+        }
+
+        $(() => {
+           $("#text").on("keypress", (event) => {
+                if (event.keyCode == 13) {
+                    sendMessage();
+                }
+           });
+        });
+
+        setInterval(loadMessages, 1000);
+
+    </script>
+
 </head>
 <body>
 
-<h1>Elanlum Chat</h1>
+<!--<h1>Elanlum Chat</h1>-->
 
-<form action="/sendMessage" method="POST">
-    <b> Your name:</b>
-    <input name="name" type="text" placeholder="Your name"/>
+<b> Your name:</b>
+<input id="name" name="name" type="text" placeholder="Your name"/>
 
-    <br/>
+<div id="chat_window">
 
-    <b>Текст сообщения</b>
-    <br/>
-    <textarea name="text" placeholder="text message"></textarea>
-    <br/>
-    <input type="submit" value="Send">
+</div>
 
-</form>
+<br/>
+<input id="text" name="text" placeholder="text message"></input>
+<!--    <br/>-->
+<!--    <input type="submit" value="Send">-->
 
 </body>
 </html>
